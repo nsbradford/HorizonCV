@@ -1,0 +1,11 @@
+
+syntax = "proto3";
+
+package acap;
+option java_package = "acap.model";
+option java_outer_classname = "HorizonMessageProtocol";
+
+message HorizonMessage {
+	double pitch = 1;
+	double bank = 2;
+}
