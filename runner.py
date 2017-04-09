@@ -53,11 +53,12 @@ def main():
 
 
 def video_demo():
-    highres_scale = 0.5
-    scaling_factor = 0.2
+    highres_scale = 0.2
+    scaling_factor = 0.1
 
     print('Load video...')
-    cap = cv2.VideoCapture('./media/flying_turn.avi') #framerate of 25
+    # cap = cv2.VideoCapture('./media/flying_turn.avi') #framerate of 25
+    cap = cv2.VideoCapture('./media/turn1.mp4') #framerate of 25
     count = 0
     m = None
     b = None
@@ -65,7 +66,7 @@ def video_demo():
         # print('Read new frame...')
         ret, frame = cap.read()
         count += 1
-        if count % 5 != 0:
+        if count % 3 != 0:
             continue
         if not ret:
             break
@@ -83,12 +84,12 @@ def video_demo():
         
         cv2.imshow('label', prediction)
         
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(0) & 0xFF == ord('q'):
             break
     cap.release()
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     # time_score()2
-    main()
+    # main()
     video_demo()
