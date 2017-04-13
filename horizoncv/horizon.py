@@ -2,27 +2,16 @@
     horizon.py
     Nicholas S. Bradford
 
-    Use algorithm from "Vision-guided flight stability and control for micro
-        air vehicles" (Ettinger et al. ).
-    Intuition: horizon will be a line dividing image into two segments with low variance,
-        which can be modeled as minimizing the product of the three eigenvalues of the
-        covariance matrix (the determinant). 
-
-    In its current form, can run 10000 iterations in 9.1 seconds, or about 30 per iteration
-        at 30Hz. Java performance benefit of 10x would mean 300 per iteration,
-        and moving to 10Hz would leave ~1000 per iteration.
-    The initial optimized search grid is on a 12x12 grid (144 values),
-        which is then refined on a full-resolution image using a gradient-descent-like
-        sampling technique. (requires 4 checks at each step and ~7 steps = ~28, but
-        will but at higher resolution)
-    Total requirements: must be able to run at least ~200 checks/second
-
 """
 
 import cv2
 import numpy as np
 import math
 
+DEBUG_VERBOSE = True
+def printV(text):
+    if DEBUG_VERBOSE:
+        print(text)
 
 def convert_m_b_to_pitch_bank(m, b, sigma_below):
     """ 'The pitch angle cannot be exactly calculated from an arbitrary horizon line, however
@@ -33,55 +22,18 @@ def convert_m_b_to_pitch_bank(m, b, sigma_below):
     """
 
     bank = math.degrees(math.atan(m))
-    
     # method from original paper
     pitch = sigma_below
-
-    # method from 
-    # 'Road environment modeling using robust perspective analysis and recursive Bayesian segmentation'
-    # focal_x = 64.4 #
-    # focal_y = 37.2 #
-    # s = 0
-    # x0 = 25 / 2 # image center, in pix
-    # y0 = 52 / 2 # image center, in pix
-    # cam_calibration = np.array([[focal_x, s, x0], 
-    #                             [0, focal_y, y0],
-    #                             [0, 0, 1]])
-    # v = np.array([x0, b, 1])
-    # v_prime = np.linalg.solve(cam_calibration, v)
-    # print(v_prime, b)
-    # pitch = math.atan(v[1])
-
-    # method from http://eprints.qut.edu.au/12839/1/3067a485.pdf
-    # u = 5
-    # v = m * u + b
-    # f = 35.0
-    # inner = (u * math.sin(bank) + v * math.sin(bank)) / f
-    # # print(math.atan(inner), math.atan(- inner), math.atan(inner) - math.atan(- inner))
-    # pitch = math.atan(inner)
-    # print(inner, pitch)
-
-    # method from https://www.researchgate.net/publication/
-    #   220143231_Sub-sampling_Real-time_vision_for_micro_air_vehicles
-    # images are 29 x 35, or 36 x 64
-    # h = 29 # height of image
-    # w = 35.0
-    # h = 20
-    # w = 35
-    # y = m * (w / 2.0) + b # y-coordinate of line at half of the screen
-    # FOVv = 40 # camera's vertical field of view
-    # pitch = y * FOVv / h
-
     return pitch, bank
 
 
-def convert_pitch_roll_to_m_b(pitch, bank):
-    """ 
-        Limits of (pitch, roll) space are [-pi/2, pi/2] for pitch and [0%, 100%] for roll
-    """
-    m = math.tan(pitch)
-    b = None
-    return (m, b)
+# def convert_pitch_roll_to_m_b(pitch, bank):
+#     """ 
+#         Limits of (pitch, roll) space are [-pi/2, pi/2] for pitch and [0%, 100%] for roll
+#     """
+#     m = math.tan(bank) #TODO
+#     b = None
+#     return (m, b)
 
 
 def img_line_mask(rows, columns, m, b):
@@ -130,12 +82,6 @@ def compute_variance_score(segment1, segment2):
         Returns:
             F (np.double): the score for these two segments (higher = better line hypothesis)
         Note that linalg.eigh() is more stable than np.linalg.eig, but only for symmetric matrices.
-
-        When the covariance matrix is nearly singular (due to color issues), the determinant
-        will also be driven to zero. Thus, we introduce additional terms to supplement the
-        score when this case occurs (the determinant dominates it in the normal case):
-          where g=GROUND and s=SKY (covariance matrices) 
-          F = [det(G) + det(S) + (eigG1 + eigG1 + eigG1)^2 + (eigS1 + eigS1 + eigS1)^2]^-1
     """
     assert segment1.shape[1] == segment2.shape[1] == 3
     if not (segment1.shape[0] > 1 and segment2.shape[0] > 1):
@@ -178,6 +124,7 @@ def accelerated_search(img, m, b, current_score):
     delta_m = 0.25
     delta_b = 1.0
     delta_factor = 0.75
+    printV('\tAccel. search begin m: {} b: {}'.format(m, b))
     for i in range(max_iter):
         # print('\tDelta', delta_m, delta_b, 'M&B', m, b)
         grid = [
@@ -198,6 +145,7 @@ def accelerated_search(img, m, b, current_score):
         #     print ('Reached a peak?')
         delta_m *= delta_factor
         delta_b *= delta_factor
+    printV('\tAccel. search end   m: {} b: {}'.format(m, b))
     return m, b    
 
 
@@ -206,10 +154,17 @@ def get_simga_below(img, m, b):
     seg1, seg2 = split_img_by_line(img, m, b)
     return seg1.size / (seg1.size + seg2.size)
 
-def print_results(m, b, m2, b2):
-    print('\tInitial answer - m:', m, '  b:', b)
-    print('\tAccelerate search...')
-    print('\tRefined_answer: - m:', m2, '  b:', b2)
+
+# def print_results(m, b, m2, b2):
+#     print('\tInitial answer - m:', m, '  b:', b)
+#     print('\tAccelerate search...')
+#     print('\tRefined_answer: - m:', m2, '  b:', b2)
+
+# scores = list(map(lambda x: score_line(img, x[0], x[1]), grid))
+# assert len(scores) > 0, 'Invalid slope and intercept ranges: ' + str(slope_range) + str(intercept_range)
+# max_index = np.argmax(scores)
+# m, b = grid[max_index]
+
 
 def optimize_scores(img, highres, slope_range, intercept_range, scaling_factor):
     """
@@ -222,27 +177,26 @@ def optimize_scores(img, highres, slope_range, intercept_range, scaling_factor):
     """
     print('Optimize...', img.shape, highres.shape)
     grid = [(m, b) for b in intercept_range for m in slope_range]    
-    # scores = list(map(lambda x: score_line(img, x[0], x[1]), grid))
-    # assert len(scores) > 0, 'Invalid slope and intercept ranges: ' + str(slope_range) + str(intercept_range)
-    # max_index = np.argmax(scores)
-    # m, b = grid[max_index]
+
+    print(len(grid))
     m, b, scores, grid, max_score = score_grid(img, grid)
     m2, b2 = accelerated_search(img, m, b * scaling_factor, max_score)
     b2 /= scaling_factor
     pitch, bank = convert_m_b_to_pitch_bank(m=m2, b=b2, sigma_below=get_simga_below(img, m2, b2))
-    # print('\tPitch:', pitch, '%  Bank:', bank, 'degrees')
+    print('\tPitch: {0:.2f}% \t Bank: {1:.2f} degrees'.format(pitch * 100, bank))
     return (m2, b2), scores, grid, pitch, bank
 
-
 def optimize_global(img, highres, scaling_factor):
+    printV('optimize_global()')
     return optimize_scores(img, highres,
                         slope_range=np.arange(-4, 4, 0.25),
                         intercept_range=np.arange( 1, img.shape[0] - 2, 0.5),
                         scaling_factor=scaling_factor)
 
 def optimize_local(img, highres, m, b, scaling_factor):
+    printV('optimize_local()')
     return optimize_scores(img, highres,
-                        slope_range=np.arange(m - 0.5, m + 0.5, 0.05),
+                        slope_range=np.arange(m - 0.5, m + 0.5, 0.1),
                         intercept_range=np.arange(max(1.0, b - 4.0), min(img.shape[0], b + 4.0), 0.5),
                         scaling_factor=scaling_factor)
 
