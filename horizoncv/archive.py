@@ -1,4 +1,16 @@
 
+
+# def print_results(m, b, m2, b2):
+#     print('\tInitial answer - m:', m, '  b:', b)
+#     print('\tAccelerate search...')
+#     print('\tRefined_answer: - m:', m2, '  b:', b2)
+
+# scores = list(map(lambda x: score_line(img, x[0], x[1]), grid))
+# assert len(scores) > 0, 'Invalid slope and intercept ranges: ' + str(slope_range) + str(intercept_range)
+# max_index = np.argmax(scores)
+# m, b = grid[max_index]
+
+
 def convert_m_b_to_pitch_bank(m, b, sigma_below):
     """ 'The pitch angle cannot be exactly calculated from an arbitrary horizon line, however
             the pitch angle will be closely proportional to the percentage of the image above 

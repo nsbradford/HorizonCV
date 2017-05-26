@@ -8,21 +8,24 @@ import cv2
 import numpy as np
 import math
 
-DEBUG_VERBOSE = True
+DEBUG_VERBOSE = False
 def printV(text):
     if DEBUG_VERBOSE:
         print(text)
 
 def convert_m_b_to_pitch_bank(m, b, sigma_below):
-    """ 'The pitch angle cannot be exactly calculated from an arbitrary horizon line, however
-            the pitch angle will be closely proportional to the percentage of the image above 
-            or below the line.'
-        Pitch angle (Theta) = size(ground) / size(ground) + size(sky)
-        Bank angle (Phi) = tan^-1(m)
+    """ Method from original paper:
+            Pitch angle (Theta) = size(ground) / size(ground) + size(sky)
+            Bank angle (Phi) = tan^-1(m)
+        Args:
+            m
+            b
+            sigma_below
+        Returns:
+            pitch
+            bank
     """
-
     bank = math.degrees(math.atan(m))
-    # method from original paper
     pitch = sigma_below
     return pitch, bank
 
@@ -36,6 +39,26 @@ def convert_m_b_to_pitch_bank(m, b, sigma_below):
 #     return (m, b)
 
 
+# TODO more efficient implementation
+# def img_line_mask2(rows, columns, m, b):
+#     """ Params:
+#             rows (int)
+#             columns (int)
+#             m (double)
+#             b (double)
+#         Returns:
+#             rows x columns np.array boolean mask with True for all values above the line
+#     """
+#     mask = np.zeros((rows, columns), dtype=np.bool)
+#     for x in range(columns):
+#         y = m * x + b
+#         # ind = np.arange(0, min(int(y), int(rows)))
+#         ind = np.arange(max(0, int(y)), int(rows))
+#         # print(y, ind)
+#         mask[ind, x] = True
+#     return mask
+
+
 def img_line_mask(rows, columns, m, b):
     """ Params:
             rows (int)
@@ -45,11 +68,10 @@ def img_line_mask(rows, columns, m, b):
         Returns:
             rows x columns np.array boolean mask with True for all values above the line
     """
-    # TODO: there must be a way to optimize this
     mask = np.zeros((rows, columns), dtype=np.bool)
     for y in range(rows):
         for x in range(columns):
-            if y > m * x + b:
+            if y >= m * x + b:
                 mask[y, x] = True
     return mask
 
@@ -132,10 +154,10 @@ def accelerated_search(img, m, b, current_score):
                     (m - delta_m, b),
                     (m, b + delta_b),
                     (m, b - delta_b),
-                    (m + delta_m, b + delta_b),
-                    (m - delta_m, b - delta_b),
-                    (m - delta_m, b + delta_b),
-                    (m + delta_m, b - delta_b),
+                    # (m + delta_m, b + delta_b),
+                    # (m - delta_m, b - delta_b),
+                    # (m - delta_m, b + delta_b),
+                    # (m + delta_m, b - delta_b),
             ]
         mTmp, bTmp, scores, grid, max_score = score_grid(img, grid)
         if max_score >= current_score:
@@ -149,21 +171,9 @@ def accelerated_search(img, m, b, current_score):
     return m, b    
 
 
-
-def get_simga_below(img, m, b):
+def get_sigma_below(img, m, b):
     seg1, seg2 = split_img_by_line(img, m, b)
     return seg1.size / (seg1.size + seg2.size)
-
-
-# def print_results(m, b, m2, b2):
-#     print('\tInitial answer - m:', m, '  b:', b)
-#     print('\tAccelerate search...')
-#     print('\tRefined_answer: - m:', m2, '  b:', b2)
-
-# scores = list(map(lambda x: score_line(img, x[0], x[1]), grid))
-# assert len(scores) > 0, 'Invalid slope and intercept ranges: ' + str(slope_range) + str(intercept_range)
-# max_index = np.argmax(scores)
-# m, b = grid[max_index]
 
 
 def optimize_scores(img, highres, slope_range, intercept_range, scaling_factor):
@@ -175,30 +185,34 @@ def optimize_scores(img, highres, slope_range, intercept_range, scaling_factor):
             Scores (list of np.double)
             Grid
     """
-    print('Optimize...', img.shape, highres.shape)
+    print(img.shape)
+    printV('Optimize... img shape {} highres shape {}'.format(img.shape, highres.shape))
     grid = [(m, b) for b in intercept_range for m in slope_range]    
 
     print(len(grid))
     m, b, scores, grid, max_score = score_grid(img, grid)
     m2, b2 = accelerated_search(img, m, b * scaling_factor, max_score)
     b2 /= scaling_factor
-    pitch, bank = convert_m_b_to_pitch_bank(m=m2, b=b2, sigma_below=get_simga_below(img, m2, b2))
+    pitch, bank = convert_m_b_to_pitch_bank(m=m2, b=b2, sigma_below=get_sigma_below(img, m2, b2))
     print('\tPitch: {0:.2f}% \t Bank: {1:.2f} degrees'.format(pitch * 100, bank))
     return (m2, b2), scores, grid, pitch, bank
+
 
 def optimize_global(img, highres, scaling_factor):
     printV('optimize_global()')
     return optimize_scores(img, highres,
-                        slope_range=np.arange(-4, 4, 0.25),
-                        intercept_range=np.arange( 1, img.shape[0] - 2, 0.5),
+                        slope_range=np.arange(-4, 4, 0.25), #0.25
+                        intercept_range=np.arange( 1, img.shape[0] - 2, 0.1), #0.5
                         scaling_factor=scaling_factor)
+
 
 def optimize_local(img, highres, m, b, scaling_factor):
     printV('optimize_local()')
     return optimize_scores(img, highres,
-                        slope_range=np.arange(m - 0.5, m + 0.5, 0.1),
-                        intercept_range=np.arange(max(1.0, b - 4.0), min(img.shape[0], b + 4.0), 0.5),
+                        slope_range=np.arange(m - 0.5, m + 0.5, 0.2),
+                        intercept_range=np.arange(max(1.0, b - 4.0), min(img.shape[0], b + 4.0), 1.0),
                         scaling_factor=scaling_factor)
+
 
 def optimize_real_time(img, highres, m, b, scaling_factor):
     return (optimize_global(img, highres, scaling_factor) if not m or not b 

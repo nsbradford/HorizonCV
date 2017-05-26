@@ -54,24 +54,24 @@ def main():
 def timerDemo():
     import timeit
     n_iterations = 1
-    n_frames = 50
-    result = timeit.timeit('demo.video_demo(filename="turn1.mp4", is_display=False, n_frames={})'.format(n_frames), 
-                        setup='from horizoncv import demo;', 
-                        number=n_iterations)
-    seconds = result / n_iterations
-    print('Timing: {} seconds for {} frames of video.'.format(seconds, n_frames))
-    print('{} frames / second'.format(n_frames / seconds))
-
-def timerDemo():
-    import timeit
-    n_iterations = 1
-    n_frames = 50
+    n_frames = 100
     result = timeit.timeit('demo.video_demo(filename="turn1.mp4", is_display=True, n_frames={})'.format(n_frames), 
                         setup='from horizoncv import demo;', 
                         number=n_iterations)
     seconds = result / n_iterations
     print('Timing: {} seconds for {} frames of video.'.format(seconds, n_frames))
     print('{} frames / second'.format(n_frames / seconds))
+
+# def timerDemo():
+#     import timeit
+#     n_iterations = 1
+#     n_frames = 50
+#     result = timeit.timeit('demo.video_demo(filename="turn1.mp4", is_display=True, n_frames={})'.format(n_frames), 
+#                         setup='from horizoncv import demo;', 
+#                         number=n_iterations)
+#     seconds = result / n_iterations
+#     print('Timing: {} seconds for {} frames of video.'.format(seconds, n_frames))
+#     print('{} frames / second'.format(n_frames / seconds))
 
 def getVideoSource(filename):
     """ 1920 x 1080 original, 960 x 540 resized """ 
@@ -82,6 +82,7 @@ def getVideoSource(filename):
         if not ret:
             break
         else:
+            print (frame.shape)
             yield frame
     cap.release()
 
