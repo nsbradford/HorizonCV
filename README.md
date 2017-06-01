@@ -1,8 +1,6 @@
 # HorizonCV
 
-#### Nicholas Bradford
-
-Real-time horizon detection with computer vision in Python, for UAV applications. Algorithm source found in [paper](http://www.tandfonline.com/doi/pdf/10.1163/156855303769156983?needAccess=true) and [master's thesis](https://pdfs.semanticscholar.org/9037/e7955e4b7c9339dc34bd75e563a86636cca8.pdf).
+Real-time horizon detection with computer vision in Python, for UAV applications. A part of WPI's [ACAP](http://www.acap.io) (Autonomous Cargo Aircraft Project), completed 2016-2017 by Nicholas Bradford. Algorithm source found in [paper](http://www.tandfonline.com/doi/pdf/10.1163/156855303769156983?needAccess=true) and [master's thesis](https://pdfs.semanticscholar.org/9037/e7955e4b7c9339dc34bd75e563a86636cca8.pdf).
 
 ![Results screenshot](media/results/screenshot.png "Results screenshot")
 
@@ -19,9 +17,36 @@ Real-time horizon detection with computer vision in Python, for UAV applications
 
 ## Usage
 
-Note that you'll need OpenCV compiled with FFMPEG support in order to load videos. See [this script](https://github.com/nsbradford/ExuberantCV/blob/master/installOpenCV.sh) for help. To run a demo:
+### Requirements
 
-    $ python runner.py
+Note that you'll need OpenCV compiled with FFMPEG support in order to load videos. Use this [script](https://github.com/nsbradford/ExuberantCV/blob/master/installOpenCV.sh) and some tutorials to understand:
+
+* MacOS
+    * The [easy](http://www.pyimagesearch.com/2016/12/19/install-opencv-3-on-macos-with-homebrew-the-easy-way/) way using Homebrew
+    * The [hard](http://www.pyimagesearch.com/2016/11/28/macos-install-opencv-3-and-python-2-7/?__s=6qbo7sdne7fzcniijrik) way
+    * With FFMPEG support [here](http://blog.jiashen.me/2014/12/23/build-opencv-3-on-mac-os-x-with-python-3-and-ffmpeg-support/)
+* Ubuntu
+    * [General](http://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/)
+    * [With CUDA](http://www.pyimagesearch.com/2016/07/11/compiling-opencv-with-cuda-support/)
+    * With ffmpeg support (needed for videos) [here](https://ubuntuforums.org/showthread.php?t=2219550)
+    * [Compiling OpenCV with FFMPEG](http://www.wiomax.com/compile-opencv-and-ffmpeg-on-ubuntu/)
+* [Installing ffmpeg](http://tipsonubuntu.com/2016/11/02/install-ffmpeg-3-2-via-ppa-ubuntu-16-04/)
+* [Compiling ffmpeg from source](http://blog.mycodesite.com/compile-opencv-with-ffmpeg-for-ubuntudebian/)
+* Installing CUDA
+    * Go [here](https://developer.nvidia.com/cuda-downloads) and download .deb for Ubuntu, DO NOT try the automatic runner it’s a pain 
+    * Official documentation [guide](http://developer.download.nvidia.com/compute/cuda/7.5/Prod/docs/sidebar/CUDA_Installation_Guide_Linux.pdf)
+    * Helpful blog [post](http://kislayabhi.github.io/Installing_CUDA_with_Ubuntu/)
+
+Then to finish, activate your new `cv` virtual environment and install the other requirements:
+
+    $ workon cv 
+    $ pip install -r requirements.txt
+
+### Demo
+
+Run a demo:
+
+    $ python runner.py   
 
 ### Protobuf compilation
 
