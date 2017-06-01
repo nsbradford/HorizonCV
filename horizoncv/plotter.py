@@ -7,6 +7,7 @@ from matplotlib import cm
 
 
 def add_line_to_frame(img, m, b, pitch, bank):
+    """ Add a red line denoting the detected horizon to the img. """
     rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     pt1 = (0, b.astype(np.int64))
     pt2 = img.shape[1] - 1, (m * (img.shape[1] - 1) + b).astype(np.int64)
@@ -20,6 +21,7 @@ def add_line_to_frame(img, m, b, pitch, bank):
 
 
 def plot2D(img, scores, m, b, pitch, bank):
+    """ 2d plot of the optimization surface next to the img. """
     font = cv2.FONT_HERSHEY_SIMPLEX
     label = 'Pitch: ' + "{:.1f}".format(pitch) + ' %     Bank: ' + "{:.1f}".format(bank) + ' degrees'
     # cv2.putText(img, label, (10,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
@@ -40,6 +42,7 @@ def plot2D(img, scores, m, b, pitch, bank):
 
 
 def scatter3D(X, Y, Z):
+    """ 3d scatterplot of the optimization surface. """
     print('Plot in 3D...')
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')

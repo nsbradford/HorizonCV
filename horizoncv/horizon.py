@@ -12,6 +12,7 @@ DEBUG_VERBOSE = False
 
 
 def printV(text):
+    """ Wrapper allowing for verbosity flag. """
     if DEBUG_VERBOSE:
         print(text)
 
@@ -34,7 +35,8 @@ def convert_m_b_to_pitch_bank(m, b, sigma_below):
 
 
 def img_line_mask(rows, columns, m, b):
-    """ Params:
+    """ Produce a mask used for splitting an image into two parts with a line.
+        Params:
             rows (int)
             columns (int)
             m (double)
@@ -51,7 +53,8 @@ def img_line_mask(rows, columns, m, b):
 
 
 def split_img_by_line(img, m, b):
-    """ Params:
+    """ Split image into two parts using a line.
+        Params:
             m: slope
             b: y-intercept
         Returns:
@@ -94,11 +97,13 @@ def compute_variance_score(segment1, segment2):
 
 
 def score_line(img, m, b):
-    """
+    """ Computes the score of a given line on an image, using the cost function.
         Params:
             img
             m
             b
+        Returns:
+            scrore (float)
     """
     # print('Score', img.shape, m, b)
     seg1, seg2 = split_img_by_line(img, m=m, b=b)
@@ -155,7 +160,7 @@ def get_sigma_below(img, m, b):
 
 
 def optimize_scores(img, highres, slope_range, intercept_range, scaling_factor):
-    """
+    """ Searches for the approximate highest-scoring (m, b) parameter pair.
         Params:
             img:
             highres:
@@ -195,8 +200,8 @@ def optimize_local(img, highres, m, b, scaling_factor):
     """ Search around a local space. """
     printV('optimize_local()')
     return optimize_scores(img, highres,
-                        slope_range=np.arange(m - 0.5, m + 0.5, 0.2),
-                        intercept_range=np.arange(max(1.0, b - 4.0), min(img.shape[0], b + 4.0), 1.0),
+                        slope_range=np.arange(m - 0.5, m + 0.5, 0.1),
+                        intercept_range=np.arange(max(1.0, b - 4.0), min(img.shape[0], b + 4.0), 0.5),
                         scaling_factor=scaling_factor)
 
 

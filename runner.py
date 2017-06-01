@@ -27,6 +27,7 @@ if __name__ == '__main__':
     testResult = testAll()
     if testResult:
         # demo.time_score()
-        # demo.main()
-        demo.timerDemo() # framerate of 25
-        # demo.video_demo('turn1.mp4') #flying_turn.avi
+        # demo.optimization_surface_demo()
+        # demo.timerDemo() # framerate of 25
+        # demo.video_demo('flying_turn.avi')
+        demo.video_demo('turn1.mp4')

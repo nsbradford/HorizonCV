@@ -1,12 +1,19 @@
 
-import cv2 # for reading photos and videos
+import cv2
 import numpy as np
 from horizoncv.horizon import optimize_real_time, optimize_global, convert_m_b_to_pitch_bank
 from . import plotter
 
 
 def load_img(path):
-    print ('load img...') # taxi_rotate.png
+    """ Load an image located at a path.
+        Args:
+            path (str): relative path to img
+        Returns:
+            resized (np.array): resized img
+            img (np.array): unaltered loaded img
+    """
+    print ('load img...')
     img = cv2.imread(path)
     print('Image shape: ', img.shape) # rows, columns, depth (height x width x color)
     print('Resize...')
@@ -15,23 +22,25 @@ def load_img(path):
     print('Resized shape:', resized.shape, img.shape)
     return resized, img
 
-# def basic_test():
-#     img = load_img('../img/taxi_rotate.png') #'../img/runway1.JPG' taxi_empty.jpg ocean sunset grass
-#     good_line = score_line(img, m=0.0, b=20)
-#     bad_line = score_line(img, m=2.0, b=0)
-#     assert good_line > bad_line
-#     print('Basic test of scoring...')
+
+def getVideoSource(filename):
+    """ Generator for cleanly loading a video file (will only work if OpenCV was
+            compiled with FFMPEG support). Videos are 1920 x 1080 original, 960 x 540 resized
+    """ 
+    print('Load video {}...'.format(filename))
+    cap = cv2.VideoCapture('./media/' + filename)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        else:
+            print (frame.shape)
+            yield frame
+    cap.release()
 
 
-def time_score():
-    import timeit
-    result = timeit.timeit('horizon.score_line(img, m=0.0,  b=20)', 
-                        setup='import horizon; img=horizon.load_img();', 
-                        number=1000)
-    print('Timing:', result/1000, 'seconds to score a single line.')
-
-
-def main():
+def optimization_surface_demo():
+    """ Show the optimization surface in 2D and 3D views for a sample image. """
     #'taxi_rotate.png runway1.JPG taxi_empty.jpg ocean sunset grass
     img, full_res = load_img('./media/taxi_rotate.png')
     # img, full_res = load_img('../img/grass_pitch_low.jpg')  
@@ -51,7 +60,8 @@ def main():
     plotter.scatter3D(X, Y, Z) # scatter3D(X[::10], Y[::10], Z[::10])
 
 
-def timerDemo():
+def timer_demo():
+    """ Time the LaneCV library to retrieve FPS (processing speed). """
     import timeit
     n_iterations = 1
     n_frames = 100
@@ -62,41 +72,9 @@ def timerDemo():
     print('Timing: {} seconds for {} frames of video.'.format(seconds, n_frames))
     print('{} frames / second'.format(n_frames / seconds))
 
-# def timerDemo():
-#     import timeit
-#     n_iterations = 1
-#     n_frames = 50
-#     result = timeit.timeit('demo.video_demo(filename="turn1.mp4", is_display=True, n_frames={})'.format(n_frames), 
-#                         setup='from horizoncv import demo;', 
-#                         number=n_iterations)
-#     seconds = result / n_iterations
-#     print('Timing: {} seconds for {} frames of video.'.format(seconds, n_frames))
-#     print('{} frames / second'.format(n_frames / seconds))
-
-def getVideoSource(filename):
-    """ 1920 x 1080 original, 960 x 540 resized """ 
-    print('Load video {}...'.format(filename))
-    cap = cv2.VideoCapture('./media/' + filename)
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        else:
-            print (frame.shape)
-            yield frame
-    cap.release()
-
-
-class Model():
-    def __init__(self):
-        self.pitch = None
-        self.roll = None
-
-    def sendMessage(self):
-        print('REPORT pitch={0:.2f} roll={1:.2f}'.format(self.pitch, self.roll))
-
 
 def video_demo(filename, is_display=True, n_frames=-1):
+    """ Run LaneCV on a sample video. """
     highres_scale = 0.2
     scaling_factor = 0.1
 
