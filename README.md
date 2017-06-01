@@ -2,11 +2,15 @@
 
 #### Nicholas Bradford
 
-Real-time horizon detection with computer vision in Python, for UAV applications. Algorithm source found in [paper](http://www.tandfonline.com/doi/pdf/10.1163/156855303769156983?needAccess=true) and [master's thesis](https://pdfs.semanticscholar.org/9037/e7955e4b7c9339dc34bd75e563a86636cca8.pdf)
+Real-time horizon detection with computer vision in Python, for UAV applications. Algorithm source found in [paper](http://www.tandfonline.com/doi/pdf/10.1163/156855303769156983?needAccess=true) and [master's thesis](https://pdfs.semanticscholar.org/9037/e7955e4b7c9339dc34bd75e563a86636cca8.pdf).
 
-    /horizoncv
-        horizon.py
-        plotter.py
+![Results screenshot](media/results/screenshot.png "Results screenshot")
+
+    /horizoncv                  Python module.
+        demo.py                 Running useful real-time demos
+        horizon.py              All the important computation
+        plotter.py              Plotting graphs
+        archive.py              Archived code that might be useful to view in the future.
     /proto
     /media                      Footage for testing
     requirements.txt            Install with $ python install -r 
@@ -15,7 +19,7 @@ Real-time horizon detection with computer vision in Python, for UAV applications
 
 ## Usage
 
-Note that you'll need OpenCV compiled with FFMPEG support in order to load videos. See [this script](https://github.com/nsbradford/ExuberantCV/blob/master/installOpenCV.sh) for help.
+Note that you'll need OpenCV compiled with FFMPEG support in order to load videos. See [this script](https://github.com/nsbradford/ExuberantCV/blob/master/installOpenCV.sh) for help. To run a demo:
 
     $ python runner.py
 

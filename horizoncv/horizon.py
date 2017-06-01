@@ -9,9 +9,12 @@ import numpy as np
 import math
 
 DEBUG_VERBOSE = False
+
+
 def printV(text):
     if DEBUG_VERBOSE:
         print(text)
+
 
 def convert_m_b_to_pitch_bank(m, b, sigma_below):
     """ Method from original paper:
@@ -28,35 +31,6 @@ def convert_m_b_to_pitch_bank(m, b, sigma_below):
     bank = math.degrees(math.atan(m))
     pitch = sigma_below
     return pitch, bank
-
-
-# def convert_pitch_roll_to_m_b(pitch, bank):
-#     """ 
-#         Limits of (pitch, roll) space are [-pi/2, pi/2] for pitch and [0%, 100%] for roll
-#     """
-#     m = math.tan(bank) #TODO
-#     b = None
-#     return (m, b)
-
-
-# TODO more efficient implementation
-# def img_line_mask2(rows, columns, m, b):
-#     """ Params:
-#             rows (int)
-#             columns (int)
-#             m (double)
-#             b (double)
-#         Returns:
-#             rows x columns np.array boolean mask with True for all values above the line
-#     """
-#     mask = np.zeros((rows, columns), dtype=np.bool)
-#     for x in range(columns):
-#         y = m * x + b
-#         # ind = np.arange(0, min(int(y), int(rows)))
-#         ind = np.arange(max(0, int(y)), int(rows))
-#         # print(y, ind)
-#         mask[ind, x] = True
-#     return mask
 
 
 def img_line_mask(rows, columns, m, b):
@@ -142,6 +116,9 @@ def score_grid(img, grid):
 
 
 def accelerated_search(img, m, b, current_score):
+    """ Hill-climbing bisection search of the (m, b) space in search for the 
+            approximate optimum, given a starting point.
+    """
     max_iter = 10
     delta_m = 0.25
     delta_b = 1.0
@@ -172,6 +149,7 @@ def accelerated_search(img, m, b, current_score):
 
 
 def get_sigma_below(img, m, b):
+    """ Returns % of image below the horizon line. """
     seg1, seg2 = split_img_by_line(img, m, b)
     return seg1.size / (seg1.size + seg2.size)
 
@@ -179,11 +157,17 @@ def get_sigma_below(img, m, b):
 def optimize_scores(img, highres, slope_range, intercept_range, scaling_factor):
     """
         Params:
-            img
+            img:
+            highres:
+            slope_range:
+            intercept_range:
+            scaling_factor:
         Returns:
             Answer: Tuple of (m, b)
-            Scores (list of np.double)
-            Grid
+            Scores: list of np.double scores corresponding to grid elements
+            Grid: list of (m, b) tuples that were examined
+            pitch: pitch angle
+            bank: bank angle
     """
     print(img.shape)
     printV('Optimize... img shape {} highres shape {}'.format(img.shape, highres.shape))
@@ -199,6 +183,7 @@ def optimize_scores(img, highres, slope_range, intercept_range, scaling_factor):
 
 
 def optimize_global(img, highres, scaling_factor):
+    """ Search an entire image for the horizon. """
     printV('optimize_global()')
     return optimize_scores(img, highres,
                         slope_range=np.arange(-4, 4, 0.25), #0.25
@@ -207,6 +192,7 @@ def optimize_global(img, highres, scaling_factor):
 
 
 def optimize_local(img, highres, m, b, scaling_factor):
+    """ Search around a local space. """
     printV('optimize_local()')
     return optimize_scores(img, highres,
                         slope_range=np.arange(m - 0.5, m + 0.5, 0.2),
@@ -215,5 +201,11 @@ def optimize_local(img, highres, m, b, scaling_factor):
 
 
 def optimize_real_time(img, highres, m, b, scaling_factor):
+    """ Begin by searching globally for the horizon, and then optimize by continuing the
+            search in only the area around the previously detected horizon. Note that the
+            original paper discourages this due to the potential for serious issues upon 
+            miscalibration or a few bad frames; this should be rectified with a Kalman filter
+            and periodic Global checks.
+    """
     return (optimize_global(img, highres, scaling_factor) if not m or not b 
         else optimize_local(img, highres, m, b, scaling_factor))

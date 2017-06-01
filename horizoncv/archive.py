@@ -1,5 +1,34 @@
 
 
+# def convert_pitch_roll_to_m_b(pitch, bank):
+#     """ 
+#         Limits of (pitch, roll) space are [-pi/2, pi/2] for pitch and [0%, 100%] for roll
+#     """
+#     m = math.tan(bank) #TODO
+#     b = None
+#     return (m, b)
+
+
+# TODO more efficient implementation
+# def img_line_mask2(rows, columns, m, b):
+#     """ Params:
+#             rows (int)
+#             columns (int)
+#             m (double)
+#             b (double)
+#         Returns:
+#             rows x columns np.array boolean mask with True for all values above the line
+#     """
+#     mask = np.zeros((rows, columns), dtype=np.bool)
+#     for x in range(columns):
+#         y = m * x + b
+#         # ind = np.arange(0, min(int(y), int(rows)))
+#         ind = np.arange(max(0, int(y)), int(rows))
+#         # print(y, ind)
+#         mask[ind, x] = True
+#     return mask
+
+
 # def print_results(m, b, m2, b2):
 #     print('\tInitial answer - m:', m, '  b:', b)
 #     print('\tAccelerate search...')
